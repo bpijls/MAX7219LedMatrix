@@ -116,6 +116,16 @@ public:
      * Oscilate the text between the two limits.
      */
     void oscillateText();
+
+    /**
+     * flips the image horizontally
+     */
+    void flipHorizontally();
+
+    /**
+     * Flips the image vertically
+     */
+    void flipVertically();
     
 private:
     byte* cols;
@@ -130,6 +140,9 @@ private:
     byte mySlaveSelectPin = 0;
     byte myCharWidth = 7;
     byte myTextAlignment = 1;
+    bool flipHorizontal = false;
+    bool flipVertical = false;
     
     void calculateTextAlignmentOffset();
+    byte reverseByte(byte b);
 };

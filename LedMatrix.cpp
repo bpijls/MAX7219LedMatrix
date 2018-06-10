@@ -32,12 +32,13 @@ void LedMatrix::init() {
 
 void LedMatrix::sendByte (const byte device, const byte reg, const byte data) {
     int offset=device;
-    int maxbytes=myNumberOfDevices;
-    
+    int maxbytes=myNumberOfDevices;    
+
     for(int i=0;i<maxbytes;i++) {
         spidata[i] = (byte)0;
         spiregister[i] = (byte)0;
     }
+
     // put our device data into the array
     spiregister[offset] = reg;
     spidata[offset] = data;
@@ -74,19 +75,31 @@ void LedMatrix::setTextAlignment(byte textAlignment) {
 void LedMatrix::calculateTextAlignmentOffset() {
     switch(myTextAlignment) {
         case TEXT_ALIGN_LEFT:
-            myTextAlignmentOffset = 0;
-            break;
+        myTextAlignmentOffset = 0;
+        break;
         case TEXT_ALIGN_LEFT_END:
-            myTextAlignmentOffset = myNumberOfDevices * 8;
-            break;
+        myTextAlignmentOffset = myNumberOfDevices * 8;
+        break;
         case TEXT_ALIGN_RIGHT:
-            myTextAlignmentOffset = myText.length() * myCharWidth - myNumberOfDevices * 8;
-            break;
+        myTextAlignmentOffset = myText.length() * myCharWidth - myNumberOfDevices * 8;
+        break;
         case TEXT_ALIGN_RIGHT_END:
-            myTextAlignmentOffset = - myText.length() * myCharWidth;
-            break;
+        myTextAlignmentOffset = - myText.length() * myCharWidth;
+        break;
     }
     
+}
+
+byte LedMatrix::reverseByte(byte b){    
+    return 
+    (b & 0b00000001) << 7 |
+    (b & 0b00000010) << 5 |
+    (b & 0b00000100) << 3 |
+    (b & 0b00001000) << 1 |
+    (b & 0b00010000) >> 1 |
+    (b & 0b00100000) >> 3 |
+    (b & 0b01000000) >> 5 |
+    (b & 0b10000000) >> 7 ;
 }
 
 void LedMatrix::clear() {
@@ -97,9 +110,12 @@ void LedMatrix::clear() {
 }
 
 void LedMatrix::commit() {
-    for (byte col = 0; col < myNumberOfDevices * 8; col++) {
-        sendByte(col / 8, col % 8 + 1, cols[col]);
-    }
+    byte colByte;
+   for (byte col = 0; col < myNumberOfDevices * 8; col++) {
+        colByte = flipHorizontal ? cols[myNumberOfDevices*8-1-col] : cols[col];    
+        colByte = flipVertical ? reverseByte(colByte) : colByte;
+        sendByte(col / 8, col % 8 + 1, colByte);
+    }   
 }
 
 void LedMatrix::setText(String text) {
@@ -163,4 +179,13 @@ void LedMatrix::setColumn(int column, byte value) {
 
 void LedMatrix::setPixel(byte x, byte y) {
     bitWrite(cols[x], y, true);
+}
+
+
+void LedMatrix::flipHorizontally(){
+    flipHorizontal = !flipHorizontal;
+}
+
+void LedMatrix::flipVertically(){
+    flipVertical = ! flipVertical;
 }
